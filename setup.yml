@@ -1,0 +1,67 @@
+- name: Setup EC2 instance
+  hosts: webservers
+  become: true
+  tasks:
+    - name: Update apt packages
+      apt:
+        update_cache: yes
+
+    - name: Install required system packages
+      apt:
+        name:
+          - apt-transport-https
+          - ca-certificates
+          - curl
+          - software-properties-common
+        state: present
+        update_cache: yes
+
+    - name: Add Docker GPG key
+      apt_key:
+        url: https://download.docker.com/linux/ubuntu/gpg
+        state: present
+
+    - name: Add Docker repository
+      apt_repository:
+        repo: deb [arch=amd64] https://download.docker.com/linux/ubuntu focal stable
+        state: present
+        filename: docker
+
+    - name: Update apt cache after adding Docker repo
+      apt:
+        update_cache: yes
+        cache_valid_time: 3600
+
+    - name: Install Docker
+      apt:
+        name:
+          - docker-ce
+          - docker-ce-cli
+          - containerd.io
+        state: latest
+
+    - name: Ensure Docker is enabled and started
+      service:
+        name: docker
+        state: started
+        enabled: true
+
+    - name: Add ubuntu user to docker group
+      user:
+        name: ubuntu
+        groups: docker
+        append: yes
+
+    - name: Reboot the server to apply group changes
+      reboot:
+        msg: "Reboot initiated by Ansible after adding user to docker group"
+        connect_timeout: 5
+        reboot_timeout: 600
+        pre_reboot_delay: 0
+        post_reboot_delay: 30
+
+    - name: Check Docker status with docker info
+      command: docker info
+      register: docker_info_output
+      changed_when: false
+      failed_when: docker_info_output.rc != 0

@@ -1,1 +1,8 @@
 node_modules/
+
+### Terraform ###
+.terraform  
+terraform.tfstate
+terraform.tfstate.backup
+.terraform.lock.hcl
+tfplan
