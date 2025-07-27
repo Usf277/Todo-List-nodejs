@@ -26,6 +26,7 @@ jobs:
         tags: ${{ secrets.DOCKER_USERNAME }}/todo-list-nodejs:latest
         
   deploy:
+    needs: build-and-push
     runs-on: [self-hosted, linux, X64] 
     steps:
       - name: Log in to DockerHub
