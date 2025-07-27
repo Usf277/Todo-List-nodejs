@@ -2,7 +2,7 @@ version: '3.8'
 
 services:
   app:
-    image: ${{ secrets.DOCKER_USERNAME }}/todo-list-nodejs:latest  # changed the build context to be the dockerhub registry image
+    image: usf277/todo-list-nodejs:latest  # changed the build context to be the dockerhub registry image
     ports:
       - "4000:4000"
     env_file:
