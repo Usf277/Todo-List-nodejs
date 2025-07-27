@@ -6,3 +6,6 @@ terraform.tfstate
 terraform.tfstate.backup
 .terraform.lock.hcl
 tfplan
+
+### MacOs ###
+.DS_Store

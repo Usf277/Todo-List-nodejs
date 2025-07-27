@@ -1,6 +1,8 @@
 - name: Setup EC2 instance
   hosts: webservers
   become: true
+  vars_files:
+    - vault.yml 
   tasks:
     - name: Update apt packages
       apt:
@@ -38,6 +40,7 @@
           - docker-ce
           - docker-ce-cli
           - containerd.io
+          - docker-compose
         state: latest
 
     - name: Ensure Docker is enabled and started
@@ -65,3 +68,30 @@
       register: docker_info_output
       changed_when: false
       failed_when: docker_info_output.rc != 0
+
+    - name: Copy docker-compose.yml with permissions
+      copy:
+        src: ./docker-compose.yml
+        dest: /home/ubuntu/docker-compose.yml
+        mode: '0644'
+    
+    - name: Copy .env with permissions
+      copy:
+        src: .env
+        dest: /home/ubuntu/.env
+        mode: '0644'
+      
+    - name: Install GitHub Runner dependencies
+      apt:
+        name: curl
+        state: present
+    - name: Download and configure GitHub Runner
+      become_user: ubuntu
+      shell: |
+        mkdir -p /home/ubuntu/actions-runner && cd /home/ubuntu/actions-runner
+        curl -o actions-runner-linux-x64-2.317.0.tar.gz -L https://github.com/actions/runner/releases/download/v2.317.0/actions-runner-linux-x64-2.317.0.tar.gz
+        tar xzf actions-runner-linux-x64-2.317.0.tar.gz
+        ./config.sh --url https://github.com/Usf277/Todo-List-nodejs --token {{ GITHUB_TOKEN }} --unattended
+        ./svc.sh install && ./svc.sh start
+      args:
+        creates: /home/ubuntu/actions-runner/run.sh
