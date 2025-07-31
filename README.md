@@ -1,109 +1,66 @@
+# DevOps for ToDo-List-nodejs
 
-## Documentation
+This repository has been enhanced with a comprehensive DevOps solution to fulfill the requirements of the DevOps Internship Assessment. The project automates the build, deployment, and management of the Todo List Node.js application.
 
-[Documentation](https://linktodocumentation)
+---
 
-📝 To-Do List nodeJs
+### Part 1: Dockerization & CI Pipeline
 
-The to-do list application is a web-based application that allows users to create and manage a list of tasks. The user interface consists of a form to add new tasks, a list of all tasks, and controls to mark tasks as complete or delete them.
+This part of the solution focuses on containerizing the application and automating the build and push process using a Continuous Integration (CI) pipeline.
 
-To create the application, Node.js is used to set up the server and handle the logic of the application. Express.js is used to create the routes for the application, allowing the user to interact with the application through a web browser. EJS is used to create the views for the application, allowing the user to see the list of tasks and the form to add new tasks. CSS is used to style the application, making it visually appealing and easy to use.
+#### Dockerization
 
-MongoDB and Mongoose are used to store the tasks in a database, allowing the user to add, delete, and update tasks as needed. Nodemon is used to monitor changes to the code and automatically restart the server, making it easy to develop and test the application.
+The Node.js application is dockerized to ensure it can run consistently across different environments.
 
-When the user adds a new task using the form, Node.js and Express.js handle the request and store the task in the database using Mongoose. When the user views the list of tasks, EJS displays the tasks from the database in a list on the web page. When the user marks a task as complete or deletes a task, Node.js and Express.js handle the request and update the database using Mongoose.
+* **`Dockerfile`**: A multi-stage `Dockerfile` has been created to build an optimized production image. It uses a Node.js base image to install dependencies and build the application, then copies the necessary files into a lightweight `alpine` image to reduce the final image size.
 
-Overall, the todo list application using Node.js, Express.js, EJS, CSS, JavaScript, MongoDB, Mongoose, and Nodemon can be a great way to create a functional and interactive web application that allows users to manage their tasks online. With the right combination of technologies, it is possible to create an application that is both functional and aesthetically pleasing, making it easy for users to manage their tasks in a convenient and efficient way.
+#### CI Pipeline with GitHub Actions
 
-Technologies Used: NodeJS, ExpressJS, EJS, CSS, JavaScript, Nodemon, MongoDB, Mongoose.
-## Demo
+A GitHub Actions workflow is used to create a CI pipeline that automates the building and pushing of the Docker image to a private Docker registry.
 
-Under process...
-## Authors
+* **Workflow Trigger**: The workflow is triggered on a `push` to the `main` branch.
+* **Jobs**: The pipeline consists of a single job that performs the following steps:
+    1. **Checkout Code**: Clones the repository.
+    2. **Login to Docker Registry**: Authenticates with a private Docker registry (e.g., Docker Hub, AWS ECR, etc.) using GitHub Secrets to securely store credentials.
+    3. **Build Docker Image**: Builds the Docker image for the Node.js application.
+    4. **Push Docker Image**: Pushes the newly built image to the private registry with the appropriate tags (e.g., `latest` and a unique commit SHA tag).
 
-- [@AnkitVishwakarma](https://github.com/Ankit6098)
+---
 
+### Part 2: Ansible Configuration
 
-## Features
+Ansible is used to configure a remote Linux VM, ensuring it has all the necessary prerequisites for running the containerized application.
 
-- Create, Update, and Delete Tasks: Enable users to create new tasks, update existing tasks (e.g., mark as completed, edit task details), and delete tasks they no longer need.
-- Task Categories provides Implement the ability for users to categorize their tasks into different categories (e.g., work, personal, shopping) or assign labels/tags to tasks for better organization and filtering.
-- MongoDb to store your the user data
-## Run Locally
+* **VM Setup**: It is assumed that a Linux VM (an EC2 instance on AWS in this case) has been provisioned. The VM's IP address and SSH credentials are configured in an Ansible inventory file.
+* **Ansible Playbook (`playbook.yml`)**: This playbook is designed to be run from your local machine to configure the remote VM. It performs the following tasks:
+    1. **Install Prerequisites**: Installs necessary packages and dependencies.
+    2. **Install Docker**: Installs Docker and Docker Compose on the VM.
+    3. **Configure Docker**: Adds the default user to the `docker` group to allow running Docker commands without `sudo`.
+    4. **Secure Credentials**: Sensitive information like the Docker registry credentials is managed using Ansible Vault, as indicated by the presence of `vault.yml`. The `provision-configure.sh` script is likely used to handle the vault encryption/decryption and playbook execution.
 
-Clone the project
+---
 
-```bash
-  git clone https://github.com/Ankit6098/Todos-nodejs
-```
+### Part 3: Docker Compose & Continuous Deployment (CD)
 
-Go to the project directory and open index.html file
+This section details the deployment of the application on the VM using Docker Compose and the implementation of a continuous deployment mechanism using a GitHub self-hosted runner.
 
-```bash
-  cd Todos-nodejs
-```
+#### Docker Compose Deployment
 
-Install the packages
+The application is deployed on the VM using a `docker-compose.yml` file.
 
-```bash
-  npm install / npm i
-```
+* **Services**: The `docker-compose.yml` defines two services:
+    1. **`app`**: The Node.js application container, built from the image pushed in the CI pipeline.
+    2. **`mongo`**: A MongoDB container to serve as the database.
+* **Persistent Data**: A Docker volume is attached to the MongoDB container to ensure data persistence, even if the container is restarted or removed.
+* **Health Checks**: The application service includes a health check to monitor its status, ensuring it's running correctly before marking it as healthy.
 
-Start the Server
+#### Continuous Deployment with GitHub Self-hosted Runner
 
-```bash
-    npm start / nodemon start
-```
-## Acknowledgements
+Instead of an external tool, a GitHub self-hosted runner is used on the EC2 instance to handle the continuous deployment part.
 
- - [nodemon](https://nodemon.io/)
- - [mongoDb](https://www.mongodb.com/)
- - [mongoose](https://mongoosejs.com/)
-
-
-## Screenshots
-
-![225232515-4c100b6b-52e4-40f8-a6d4-85e30dc2f5e7](https://github.com/Ankit6098/Todos-nodejs/assets/92246613/487f548f-7ca6-4183-9443-c88c9f79c3f0)
-![225232960-da554f1f-ba4a-41f8-9856-edaebe339d76](https://github.com/Ankit6098/Todos-nodejs/assets/92246613/25515d2e-1d72-498d-8044-59a01c6b9127)
-![225238829-05433362-5b16-454c-92d5-5e536fe6912e](https://github.com/Ankit6098/Todos-nodejs/assets/92246613/316d15ca-1fe8-4581-80b1-fc316340bba6)
-![225239140-226f8eae-d8b8-4055-8a68-d85d523c2422](https://github.com/Ankit6098/Todos-nodejs/assets/92246613/44a0c418-449e-446f-8a8e-3c4e14fca8bf)
-![225239221-caf86f3d-ef17-4d18-80a6-c72123ff5444](https://github.com/Ankit6098/Todos-nodejs/assets/92246613/2ee90ab0-95d4-44f4-80ac-b17b088ac1ce)
-![225239406-98b7ba7d-df97-4d27-bb66-596a32187d87](https://github.com/Ankit6098/Todos-nodejs/assets/92246613/960ff353-1ce9-4ef8-94e4-10af09184fd2)
-![225239841-4b5d77f0-4a54-4339-b6b3-b6a1be6776b5](https://github.com/Ankit6098/Todos-nodejs/assets/92246613/f5ffc3b8-480f-4d11-9a0b-c469e3c17e8e)
-
-
-## Related
-
-Here are some other projects
-
-[Alarm CLock - javascript](https://github.com/Ankit6098/Todos-nodejs)\
-[IMDb Clone - javascript](https://github.com/Ankit6098/IMDb-Clone)
-
-
-## 🚀 About Me
-I'm a full stack developer...
-
-
-# Hi, I'm Ankit! 👋
-
-I'm a full stack developer 😎 ... Love to Develop Classic Unique fascinating and Eye Catching UI and Love to Create Projects and Building logics.
-## 🔗 Links
-[![portfolio](https://img.shields.io/badge/my_portfolio-000?style=for-the-badge&logo=ko-fi&logoColor=white)](https://ankithub.me/Resume/)
-
-[![linkedin](https://img.shields.io/badge/linkedin-0A66C2?style=for-the-badge&logo=linkedin&logoColorwhite=)](https://www.linkedin.com/in/ankit-vishwakarma-6531221b0/)
-
-
-## Other Common Github Profile Sections
-🧠 I'm currently learning FullStack Developer Course from Coding Ninjas
-
-📫 How to reach me ankitvis609@gmail.com
-
-
-## 🛠 Skills
-React, Java, Javascript, HTML, CSS, Nodejs, ExpressJs, Mongodb, Mongoose...
-
-
-## Feedback
-
-If you have any feedback, please reach out to us at ankitvis609@gmail.com
-
+* **Justification**: This approach integrates the CD process directly into the GitHub Actions ecosystem. By setting up a self-hosted runner on the EC2 VM, the final deployment step of the workflow can be executed directly on the target machine. This provides a secure and integrated way to pull the latest image and update the running container.
+* **Implementation**:
+  * A GitHub self-hosted runner is installed and configured on the EC2 VM.
+  * The CI/CD workflow is extended with a new job that targets the self-hosted runner.
+  * This job is responsible for connecting to the Docker daemon on the VM.
+  * It then logs in to the private Docker registry, pulls the latest image, and uses `docker-compose` to restart the application, ensuring the new image is used.
