@@ -50,3 +50,6 @@ resource "aws_instance" "todo_vm" {
     Name = "todo-vm"
   }
 }
+resource "aws_eip" "todo_eip" {
+  instance = aws_instance.todo_vm.id
+}

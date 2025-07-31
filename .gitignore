@@ -9,3 +9,6 @@ tfplan
 
 ### MacOs ###
 .DS_Store
+
+### Ansible ###
+.ansible
