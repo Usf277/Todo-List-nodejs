@@ -1,66 +1,131 @@
-# DevOps for ToDo-List-nodejs
+# 🚀 DevOps for ToDo-List-nodejs
 
-This repository has been enhanced with a comprehensive DevOps solution to fulfill the requirements of the DevOps Internship Assessment. The project automates the build, deployment, and management of the Todo List Node.js application.
-
----
-
-### Part 1: Dockerization & CI Pipeline
-
-This part of the solution focuses on containerizing the application and automating the build and push process using a Continuous Integration (CI) pipeline.
-
-#### Dockerization
-
-The Node.js application is dockerized to ensure it can run consistently across different environments.
-
-* **`Dockerfile`**: A multi-stage `Dockerfile` has been created to build an optimized production image. It uses a Node.js base image to install dependencies and build the application, then copies the necessary files into a lightweight `alpine` image to reduce the final image size.
-
-#### CI Pipeline with GitHub Actions
-
-A GitHub Actions workflow is used to create a CI pipeline that automates the building and pushing of the Docker image to a private Docker registry.
-
-* **Workflow Trigger**: The workflow is triggered on a `push` to the `main` branch.
-* **Jobs**: The pipeline consists of a single job that performs the following steps:
-    1. **Checkout Code**: Clones the repository.
-    2. **Login to Docker Registry**: Authenticates with a private Docker registry (e.g., Docker Hub, AWS ECR, etc.) using GitHub Secrets to securely store credentials.
-    3. **Build Docker Image**: Builds the Docker image for the Node.js application.
-    4. **Push Docker Image**: Pushes the newly built image to the private registry with the appropriate tags (e.g., `latest` and a unique commit SHA tag).
+This repository delivers a **robust DevOps solution** for the [Todo List Node.js Application](https://github.com/Ankit6098/Todo-List-nodejs), crafted for a DevOps Internship Assessment. It automates the **build**, **deployment**, and **management** processes using modern DevOps tools, ensuring a seamless, scalable, and efficient workflow.
 
 ---
 
-### Part 2: Ansible Configuration
+## 📁 Project Structure
 
-Ansible is used to configure a remote Linux VM, ensuring it has all the necessary prerequisites for running the containerized application.
-
-* **VM Setup**: It is assumed that a Linux VM (an EC2 instance on AWS in this case) has been provisioned. The VM's IP address and SSH credentials are configured in an Ansible inventory file.
-* **Ansible Playbook (`playbook.yml`)**: This playbook is designed to be run from your local machine to configure the remote VM. It performs the following tasks:
-    1. **Install Prerequisites**: Installs necessary packages and dependencies.
-    2. **Install Docker**: Installs Docker and Docker Compose on the VM.
-    3. **Configure Docker**: Adds the default user to the `docker` group to allow running Docker commands without `sudo`.
-    4. **Secure Credentials**: Sensitive information like the Docker registry credentials is managed using Ansible Vault, as indicated by the presence of `vault.yml`. The `provision-configure.sh` script is likely used to handle the vault encryption/decryption and playbook execution.
+```plaintext
+├── .github/
+│   └── workflows/
+│       └── ci.yml              # GitHub Actions workflow for CI/CD
+├── ansible/
+│   ├── inventory               # Inventory file with VM IPs
+│   ├── playbook.yml            # Ansible playbook for VM configuration
+│   └── vault.yml               # Encrypted credentials using Ansible Vault
+├── dockerfile                  # Multi-stage Docker build for the app
+├── terraform/
+│   ├── main.tf                 # AWS infrastructure (EC2, security group, key)
+│   └── outputs.tf              # Terraform output configurations
+├── docker-compose.yml          # Application + MongoDB setup
+├── provision-configure.sh      # Script to provision and configure the server
+```
 
 ---
 
-### Part 3: Docker Compose & Continuous Deployment (CD)
+## 🧱 Part 1: Dockerization & CI Pipeline
 
-This section details the deployment of the application on the VM using Docker Compose and the implementation of a continuous deployment mechanism using a GitHub self-hosted runner.
+The Node.js application is containerized for consistent environments and integrated into a CI pipeline for automated builds.
 
-#### Docker Compose Deployment
+- **Description**:
+  - Cloned the [Todo-List-nodejs repository](https://github.com/Ankit6098/Todo-List-nodejs).
+  - Created a `Dockerfile` with a multi-stage build to containerize the Node.js app, ensuring a lightweight image.
+  - Configured `.env` with a custom MongoDB Atlas connection string for database connectivity.
+  - Developed `docker-compose.yml` to define two services: `app` (Node.js backend) and `mongodb` (official MongoDB image), linked via an internal Docker network for local testing with `docker-compose up`.
+  - Implemented a GitHub Actions workflow (`ci.yml`) triggered on `master` branch pushes, which:
+    - Clones the repository.
+    - Builds the Docker image from the `Dockerfile`.
+    - Authenticates with a private Docker registry using GitHub secrets.
+    - Pushes the image tagged as `latest` to the registry.
 
-The application is deployed on the VM using a `docker-compose.yml` file.
+---
 
-* **Services**: The `docker-compose.yml` defines two services:
-    1. **`app`**: The Node.js application container, built from the image pushed in the CI pipeline.
-    2. **`mongo`**: A MongoDB container to serve as the database.
-* **Persistent Data**: A Docker volume is attached to the MongoDB container to ensure data persistence, even if the container is restarted or removed.
-* **Health Checks**: The application service includes a health check to monitor its status, ensuring it's running correctly before marking it as healthy.
+## 🔧 Part 2: Infrastructure & Configuration
 
-#### Continuous Deployment with GitHub Self-hosted Runner
+Terraform and Ansible automate the provisioning and configuration of the AWS EC2 instance for a reliable infrastructure setup.
 
-Instead of an external tool, a GitHub self-hosted runner is used on the EC2 instance to handle the continuous deployment part.
+- **Description**:
+  - Provisioned an AWS EC2 instance using Terraform, including:
+    - Configured provider, SSH key pair, security group, and instance resources.
+    - Generated an Elastic IP output for dynamic access.
+  - Automated EC2 configuration with Ansible playbook (`playbook.yml`):
+    - Updated apt packages and installed essential tools (e.g., curl, Docker).
+    - Added Docker’s official GPG key and repository, installed Docker Engine, and enabled the Docker service.
+    - Added the user to the `docker` group and triggered a reboot to apply changes.
+    - Managed secrets securely with Ansible Vault (`vault.yml`).
+  - Scripted the full workflow in `provision-configure.sh`:
+    - Ran Terraform with auto-approve.
+    - Dynamically extracted the EC2 IP and generated an Ansible inventory.
+    - Warmed up the SSH connection to bypass host key prompts.
+    - Executed the Ansible playbook to configure the EC2 instance.
 
-* **Justification**: This approach integrates the CD process directly into the GitHub Actions ecosystem. By setting up a self-hosted runner on the EC2 VM, the final deployment step of the workflow can be executed directly on the target machine. This provides a secure and integrated way to pull the latest image and update the running container.
-* **Implementation**:
-  * A GitHub self-hosted runner is installed and configured on the EC2 VM.
-  * The CI/CD workflow is extended with a new job that targets the self-hosted runner.
-  * This job is responsible for connecting to the Docker daemon on the VM.
-  * It then logs in to the private Docker registry, pulls the latest image, and uses `docker-compose` to restart the application, ensuring the new image is used.
+---
+
+## 🚢 Part 3: Deployment & Continuous Delivery
+
+Docker Compose and a GitHub self-hosted runner enable automated deployment and continuous delivery on the EC2 instance.
+
+- **Description**:
+  - Enhanced Terraform configuration:
+    - Updated the security group to allow inbound traffic on port 4000 for production access.
+    - Increased EC2 t2.micro EBS storage to 16GB from 8GB for improved capacity.
+  - Configured `docker-compose.yml` for deployment:
+    - Implemented health checks for the Node.js app (HTTP on port 4000) and MongoDB (mongosh ping) to ensure service reliability.
+    - Set up to pull the `todo-list-nodejs:latest` image from DockerHub, aligning with the CI pipeline.
+  - Used Ansible to automate:
+    - Deployment of `docker-compose.yml` and `.env` to the EC2 home directory for consistent setup.
+    - Installation of a GitHub self-hosted runner, with secure token storage in `vault.yml` using Ansible Vault.
+  - Established continuous deployment with a GitHub self-hosted runner:
+    - Integrated with `ci.yml` for a unified CI/CD pipeline.
+    - Triggers deployments on `master` branch pushes, pulling the latest image and restarting services with `docker-compose`.
+    - Runs on the EC2 instance, optimizing costs and enabling customized workflows.
+
+---
+
+## ✅ Summary
+
+| **Feature**                     | **Tool Used**                     |
+|---------------------------------|-----------------------------------|
+| 🚀 CI/CD                       | GitHub Actions                    |
+| 🐳 Containerization            | Docker                            |
+| 📡 Cloud Infrastructure        | AWS (via Terraform)               |
+| 🤖 Server Configuration        | Ansible                           |
+| 🧬 Deployment Automation       | Docker Compose + Self-hosted Runner |
+| 🔐 Secret Management           | Ansible Vault                     |
+
+---
+
+## 📌 Requirements
+
+- AWS Account
+- GitHub Repository with configured secrets
+- DockerHub or private registry credentials
+- SSH key pair for Ansible
+- GitHub Runner Token
+
+---
+
+## 📚 Useful Commands
+
+```bash
+# 🛠️ Provision and configure the VM
+bash provision-configure.sh
+
+# 🔐 Encrypt Ansible Vault
+ansible-vault encrypt vault.yml
+
+# 🔓 Decrypt Ansible Vault
+ansible-vault decrypt vault.yml
+
+# ▶️ Run Ansible playbook
+ansible-playbook -i ansible/inventory ansible/playbook.yml --ask-vault-pass
+```
+
+---
+
+## 👨‍💻 Author
+
+**Name**: [Your Name]  
+**Role**: DevOps Engineer Intern Candidate  
+**Contact**: [your-email@example.com]
